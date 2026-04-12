@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>✨ わくわくおそらゲーム ✨</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --sky1: #87CEEB;
+    --sky2: #B0E0FF;
+    --transition: 2s ease;
+  }
+
+  body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    height: 100dvh;
+    overflow: hidden;
+    touch-action: manipulation;
+    user-select: none;
+  }
+
+  /* ========== SKY ========== */
+  #sky {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 100%);
+    transition: background var(--transition);
+    z-index: 0;
+  }
+
+  /* ========== CLOUDS ========== */
+  .cloud {
+    position: absolute;
+    opacity: 0;
+    transition: opacity 2s ease;
+    pointer-events: none;
+  }
+  .cloud.visible { opacity: 1; }
+  .cloud svg { filter: drop-shadow(0 4px 12px rgba(255,255,255,0.6)); }
+
+  /* ========== SUN ========== */
+  #sun {
+    position: absolute;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #FFF176, #FFD700 50%, #FF8C00);
+    box-shadow: 0 0 60px 30px rgba(255,220,0,0.5), 0 0 120px 60px rgba(255,180,0,0.25);
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: all var(--transition);
+    pointer-events: none;
+  }
+  #sun::after {
+    content:'';
+    position:absolute;
+    inset:-24px;
+    border-radius:50%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,220,0,0.25) 20deg, transparent 40deg);
+    animation: sunRay 8s linear infinite;
+  }
+  @keyframes sunRay { to { transform: rotate(360deg); } }
+
+  /* ========== MOON ========== */
+  #moon {
+    position: absolute;
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #FFFFF0, #E8E8D0 60%, #C8C8A8);
+    box-shadow: 0 0 40px 20px rgba(220,220,180,0.35), inset -12px -8px 0 rgba(180,180,150,0.3);
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: all var(--transition);
+    pointer-events: none;
+  }
+
+  /* ========== STARS ========== */
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.5s ease;
+  }
+  .star.twinkle {
+    animation: twinkle var(--dur, 2s) ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%,100% { transform: scale(1); opacity: var(--op, 0.8); }
+    50%      { transform: scale(1.6); opacity: 1; }
+  }
+
+  /* ========== SHOOTING STAR ========== */
+  .shooting {
+    position: absolute;
+    width: 120px; height: 2px;
+    background: linear-gradient(90deg, white, transparent);
+    border-radius: 2px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  @keyframes shoot {
+    0%   { opacity: 1; transform: translate(0,0) rotate(-30deg); }
+    100% { opacity: 0; transform: translate(280px, 160px) rotate(-30deg); }
+  }
+
+  /* ========== RAINBOW ========== */
+  #rainbow {
+    position: absolute;
+    width: 600px; height: 300px;
+    border-radius: 300px 300px 0 0;
+    border: 28px solid transparent;
+    border-image: linear-gradient(180deg,
+      rgba(255,100,100,0.7) 0%, rgba(255,165,0,0.7) 17%,
+      rgba(255,240,0,0.7) 34%, rgba(100,220,100,0.7) 50%,
+      rgba(0,180,255,0.7) 67%, rgba(130,80,240,0.7) 84%,
+      rgba(220,80,220,0.7) 100%) 1;
+    bottom: 10%; left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 2s ease;
+    pointer-events: none;
+    filter: blur(2px);
+  }
+
+  /* ========== FIREFLIES ========== */
+  .firefly {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #ADFF2F;
+    box-shadow: 0 0 10px 4px rgba(173,255,47,0.7);
+    opacity: 0;
+    pointer-events: none;
+  }
+  @keyframes flyMove {
+    0%   { transform: translate(0,0); opacity:0; }
+    20%  { opacity:1; }
+    80%  { opacity:1; }
+    100% { transform: translate(var(--dx,60px), var(--dy,-40px)); opacity:0; }
+  }
+
+  /* ========== OVERLAY EMOJI PARTICLES ========== */
+  .emoji-burst {
+    position: fixed;
+    font-size: 2rem;
+    pointer-events: none;
+    z-index: 100;
+    animation: emojiFloat 1.8s ease-out forwards;
+  }
+  @keyframes emojiFloat {
+    0%   { opacity:1; transform: translateY(0) scale(1); }
+    100% { opacity:0; transform: translateY(-120px) scale(1.5); }
+  }
+
+  /* ========== BUTTONS AREA ========== */
+  #ui {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 12px 10px 20px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  #btn-row1, #btn-row2 {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .sky-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: none;
+    border-radius: 22px;
+    padding: 10px 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-shadow: 0 5px 14px rgba(0,0,0,0.22);
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    min-width: 66px;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sky-btn .icon { font-size: 1.8rem; line-height: 1; }
+  .sky-btn:active { transform: scale(0.91); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+
+  .btn-morning  { background: linear-gradient(135deg, #FFB347, #FFD700); }
+  .btn-noon     { background: linear-gradient(135deg, #29B6F6, #0288D1); }
+  .btn-sunset   { background: linear-gradient(135deg, #FF7043, #FF4081); }
+  .btn-dusk     { background: linear-gradient(135deg, #7B4FA8, #4A148C); }
+  .btn-night    { background: linear-gradient(135deg, #1A237E, #0D0D2B); }
+  .btn-rainbow  { background: linear-gradient(135deg, #FF6B6B, #FFE66D, #4ECDC4); }
+  .btn-shoot    { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .btn-firefly  { background: linear-gradient(135deg, #134E5E, #71B280); }
+  .btn-cloud    { background: linear-gradient(135deg, #89CFF0, #aad4f5); }
+  .btn-moon     { background: linear-gradient(135deg, #4a5a8a, #223); }
+
+  /* active scene highlight */
+  .sky-btn.active { box-shadow: 0 0 0 4px white, 0 5px 14px rgba(0,0,0,0.3); }
+
+  /* ========== TITLE ========== */
+  #title {
+    position: fixed;
+    top: 14px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    white-space: nowrap;
+    z-index: 10;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+  }
+
+  /* ========== AURORA ========== */
+  #aurora {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 3s ease;
+    pointer-events: none;
+    background: linear-gradient(180deg,
+      rgba(0,255,150,0.08) 0%,
+      rgba(0,200,255,0.06) 30%,
+      rgba(180,0,255,0.05) 60%,
+      transparent 100%);
+    animation: auroraPulse 6s ease-in-out infinite;
+  }
+  @keyframes auroraPulse {
+    0%,100% { opacity: var(--ao, 0); transform: scaleX(1); }
+    50%     { opacity: calc(var(--ao, 0) * 1.6); transform: scaleX(1.05); }
+  }
+
+</style>
+</head>
+<body>
+
+<div id="sky"></div>
+<div id="aurora"></div>
+<div id="rainbow"></div>
+<div id="sun"></div>
+<div id="moon"></div>
+
+<div id="title">✨ わくわく おそら ✨</div>
+
+<div id="ui">
+  <div id="btn-row1">
+    <button class="sky-btn btn-morning active" onclick="setScene('morning', this)">
+      <span class="icon">🌅</span>あさ
+    </button>
+    <button class="sky-btn btn-noon" onclick="setScene('noon', this)">
+      <span class="icon">☀️</span>ひる
+    </button>
+    <button class="sky-btn btn-sunset" onclick="setScene('sunset', this)">
+      <span class="icon">🌇</span>ゆうやけ
+    </button>
+    <button class="sky-btn btn-dusk" onclick="setScene('dusk', this)">
+      <span class="icon">🌆</span>たそがれ
+    </button>
+    <button class="sky-btn btn-night" onclick="setScene('night', this)">
+      <span class="icon">🌃</span>よる
+    </button>
+  </div>
+  <div id="btn-row2">
+    <button class="sky-btn btn-rainbow" onclick="toggleRainbow(this)">
+      <span class="icon">🌈</span>にじ
+    </button>
+    <button class="sky-btn btn-shoot" onclick="shootStar(this)">
+      <span class="icon">🌠</span>ながれぼし
+    </button>
+    <button class="sky-btn btn-firefly" onclick="spawnFireflies(this)">
+      <span class="icon">✨</span>ほたる
+    </button>
+    <button class="sky-btn btn-cloud" onclick="toggleClouds(this)">
+      <span class="icon">☁️</span>くも
+    </button>
+    <button class="sky-btn btn-moon" onclick="toggleMoon(this)">
+      <span class="icon">🌕</span>おつきさま
+    </button>
+  </div>
+</div>
+
+<script>
+// ======================== SCENES ========================
+const scenes = {
+  morning: {
+    sky1: '#FF8C69', sky2: '#FFD9A0',
+    sunTop: '10%', sunOpacity: 1, sunSize: '110px',
+    sunColor: 'radial-gradient(circle at 40% 35%, #FFF9C4, #FFB347 60%, #FF6347)',
+    moonOpacity: 0,
+    starsOpacity: 0,
+    aurorOp: 0,
+    emoji: ['🌸','🐦','🌼','🌺']
+  },
+  noon: {
+    sky1: '#1E90FF', sky2: '#87CEFA',
+    sunTop: '6%', sunOpacity: 1, sunSize: '120px',
+    sunColor: 'radial-gradient(circle at 40% 35%, #FFFFFF, #FFF176 40%, #FFD700)',
+    moonOpacity: 0,
+    starsOpacity: 0,
+    aurorOp: 0,
+    emoji: ['🌞','⛅','🦋','🌻']
+  },
+  sunset: {
+    sky1: '#FF4500', sky2: '#FF8C00',
+    sunTop: '55%', sunOpacity: 1, sunSize: '130px',
+    sunColor: 'radial-gradient(circle at 40% 35%, #FFD700, #FF6347 60%, #DC143C)',
+    moonOpacity: 0,
+    starsOpacity: 0,
+    aurorOp: 0,
+    emoji: ['🌅','🔥','🦩','🌹']
+  },
+  dusk: {
+    sky1: '#2C1654', sky2: '#E27D60',
+    sunTop: '80%', sunOpacity: 0.6, sunSize: '100px',
+    sunColor: 'radial-gradient(circle at 40% 35%, #FFA07A, #FF4500 60%, #8B0000)',
+    moonOpacity: 0.6,
+    starsOpacity: 0.5,
+    aurorOp: 0,
+    emoji: ['🌆','🦉','💜','🌙']
+  },
+  night: {
+    sky1: '#050520', sky2: '#0A0A40',
+    sunTop: '110%', sunOpacity: 0, sunSize: '110px',
+    sunColor: 'radial-gradient(circle at 40% 35%, #FFF176, #FFD700 50%, #FF8C00)',
+    moonOpacity: 1,
+    starsOpacity: 1,
+    aurorOp: 0.55,
+    emoji: ['🌟','🦇','⭐','💫','🌙']
+  }
+};
+
+let currentScene = 'morning';
+let rainbowOn = false;
+let cloudsOn = false;
+let moonOn = false;
+let extraMoon = false;
+
+// ======================== STARS ========================
+const starContainer = document.getElementById('sky');
+const starEls = [];
+for (let i = 0; i < 90; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const size = Math.random() * 4 + 2;
+  s.style.cssText = `
+    width:${size}px; height:${size}px;
+    top:${Math.random()*65}%;
+    left:${Math.random()*100}%;
+    --op:${0.5 + Math.random()*0.5};
+    --dur:${1.5 + Math.random()*3}s;
+    animation-delay:${Math.random()*3}s;
+  `;
+  document.getElementById('sky').after(s);
+  document.body.insertBefore(s, document.getElementById('ui'));
+  starEls.push(s);
+}
+
+// ======================== CLOUDS ========================
+const cloudSVGs = [
+  `<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="100" cy="60" rx="90" ry="28" fill="rgba(255,255,255,0.92)"/>
+    <ellipse cx="70" cy="48" rx="50" ry="32" fill="rgba(255,255,255,0.95)"/>
+    <ellipse cx="130" cy="44" rx="44" ry="28" fill="rgba(255,255,255,0.93)"/>
+    <ellipse cx="100" cy="38" rx="36" ry="26" fill="white"/>
+  </svg>`,
+  `<svg viewBox="0 0 240 90" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="120" cy="68" rx="110" ry="26" fill="rgba(255,255,255,0.90)"/>
+    <ellipse cx="80" cy="52" rx="56" ry="34" fill="rgba(255,255,255,0.93)"/>
+    <ellipse cx="150" cy="46" rx="52" ry="30" fill="rgba(255,255,255,0.94)"/>
+    <ellipse cx="110" cy="36" rx="42" ry="30" fill="white"/>
+  </svg>`
+];
+
+const cloudEls = [];
+const cloudPositions = [
+  { top:'12%', left:'5%',  width:160 },
+  { top:'18%', right:'8%', width:190 },
+  { top:'28%', left:'28%', width:140 },
+];
+cloudPositions.forEach((pos, i) => {
+  const c = document.createElement('div');
+  c.className = 'cloud';
+  c.innerHTML = cloudSVGs[i % cloudSVGs.length];
+  c.style.top = pos.top;
+  if (pos.left)  c.style.left  = pos.left;
+  if (pos.right) c.style.right = pos.right;
+  c.querySelector('svg').style.width = pos.width + 'px';
+  document.body.insertBefore(c, document.getElementById('ui'));
+  cloudEls.push(c);
+  // gentle drift
+  c.style.animation = `cloudDrift ${14 + i * 3}s ease-in-out infinite alternate`;
+});
+
+const driftStyle = document.createElement('style');
+driftStyle.textContent = `
+  @keyframes cloudDrift {
+    0%   { transform: translateX(0px); }
+    100% { transform: translateX(${18}px); }
+  }
+`;
+document.head.appendChild(driftStyle);
+
+// ======================== SET SCENE ========================
+function setScene(name, btn) {
+  currentScene = name;
+  const s = scenes[name];
+  const sky = document.getElementById('sky');
+  const sun = document.getElementById('sun');
+  const moon = document.getElementById('moon');
+  const aurora = document.getElementById('aurora');
+
+  sky.style.setProperty('--sky1', s.sky1);
+  sky.style.setProperty('--sky2', s.sky2);
+  sky.style.background = `linear-gradient(180deg, ${s.sky1} 0%, ${s.sky2} 100%)`;
+
+  sun.style.top = s.sunTop;
+  sun.style.opacity = s.sunOpacity;
+  sun.style.width = s.sunSize;
+  sun.style.height = s.sunSize;
+  sun.style.background = s.sunColor;
+
+  // moon follows scene unless user toggled
+  if (!extraMoon) {
+    moon.style.opacity = s.moonOpacity;
+    moonOn = s.moonOpacity > 0;
+  }
+
+  // stars
+  starEls.forEach(st => {
+    st.style.opacity = s.starsOpacity > 0 ? '' : '0';
+    if (s.starsOpacity > 0) {
+      st.classList.add('twinkle');
+      st.style.opacity = null;
+    } else {
+      st.classList.remove('twinkle');
+      st.style.opacity = '0';
+    }
+  });
+
+  // aurora
+  aurora.style.setProperty('--ao', s.aurorOp);
+  aurora.style.opacity = s.aurorOp;
+
+  // active button
+  document.querySelectorAll('.sky-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  burstEmoji(s.emoji, btn);
+}
+
+// ======================== TOGGLE RAINBOW ========================
+function toggleRainbow(btn) {
+  rainbowOn = !rainbowOn;
+  document.getElementById('rainbow').style.opacity = rainbowOn ? '1' : '0';
+  btn.classList.toggle('active', rainbowOn);
+  if (rainbowOn) burstEmoji(['🌈','🌟','💛','💚','💙'], btn);
+}
+
+// ======================== TOGGLE CLOUDS ========================
+function toggleClouds(btn) {
+  cloudsOn = !cloudsOn;
+  cloudEls.forEach(c => c.classList.toggle('visible', cloudsOn));
+  btn.classList.toggle('active', cloudsOn);
+  if (cloudsOn) burstEmoji(['☁️','🌤️','⛅'], btn);
+}
+
+// ======================== TOGGLE MOON ========================
+function toggleMoon(btn) {
+  extraMoon = !extraMoon;
+  moonOn = extraMoon;
+  document.getElementById('moon').style.opacity = extraMoon ? '1' : (scenes[currentScene].moonOpacity || '0');
+  btn.classList.toggle('active', extraMoon);
+  if (extraMoon) burstEmoji(['🌕','⭐','🌙','💫'], btn);
+}
+
+// ======================== SHOOTING STAR ========================
+function shootStar(btn) {
+  burstEmoji(['🌠','⭐','💫'], btn);
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'shooting';
+      s.style.top  = (5 + Math.random() * 45) + '%';
+      s.style.left = (Math.random() * 40) + '%';
+      s.style.animation = 'shoot 1s ease-out forwards';
+      document.body.insertBefore(s, document.getElementById('ui'));
+      setTimeout(() => s.remove(), 1200);
+    }, i * 350);
+  }
+}
+
+// ======================== FIREFLIES ========================
+function spawnFireflies(btn) {
+  burstEmoji(['✨','🌿','💚'], btn);
+  for (let i = 0; i < 18; i++) {
+    setTimeout(() => {
+      const f = document.createElement('div');
+      f.className = 'firefly';
+      f.style.left   = (20 + Math.random() * 60) + '%';
+      f.style.bottom = (15 + Math.random() * 40) + '%';
+      const dx = (Math.random() - 0.5) * 140;
+      const dy = -(20 + Math.random() * 100);
+      f.style.setProperty('--dx', dx + 'px');
+      f.style.setProperty('--dy', dy + 'px');
+      f.style.animation = `flyMove ${1.5 + Math.random()}s ease-out forwards`;
+      document.body.insertBefore(f, document.getElementById('ui'));
+      setTimeout(() => f.remove(), 2800);
+    }, i * 80);
+  }
+}
+
+// ======================== EMOJI BURST ========================
+function burstEmoji(emojis, btn) {
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top;
+  for (let i = 0; i < Math.min(emojis.length, 4); i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'emoji-burst';
+      el.textContent = emojis[i % emojis.length];
+      el.style.left = (cx + (Math.random()-0.5)*60) + 'px';
+      el.style.top  = (cy - 10) + 'px';
+      el.style.animationDelay = (i * 0.08) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2000);
+    }, i * 80);
+  }
+}
+
+// ======================== MOON PHASE ========================
+// Crescent inner shadow for moon
+document.getElementById('moon').style.cssText += `
+  box-shadow: 0 0 40px 20px rgba(220,220,180,0.35),
+              inset -18px -10px 0 rgba(100,100,80,0.25);
+`;
+
+// INIT
+setScene('morning', document.querySelector('.btn-morning'));
+</script>
+</body>
+</html>
