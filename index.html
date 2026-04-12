@@ -251,6 +251,237 @@
     50%     { opacity: calc(var(--ao, 0) * 1.6); transform: scaleX(1.05); }
   }
 
+  /* ========== GROUND & TRACK ========== */
+  #ground {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 72px;
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  /* grass strip */
+  #ground::before {
+    content:'';
+    position: absolute;
+    bottom: 42px; left: 0; right: 0;
+    height: 20px;
+    background: linear-gradient(180deg, #5DBB5D 0%, #3E9E3E 100%);
+    border-radius: 0;
+  }
+
+  /* dirt / ground base */
+  #ground::after {
+    content:'';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 44px;
+    background: linear-gradient(180deg, #8B6914 0%, #6B4F10 100%);
+  }
+
+  /* rail sleepers (ties) */
+  #track {
+    position: fixed;
+    bottom: 42px; left: 0; right: 0;
+    height: 20px;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  #track-inner {
+    display: flex;
+    gap: 0;
+    animation: trackScroll 0.6s linear infinite;
+    width: 200%;
+  }
+  .sleeper {
+    flex-shrink: 0;
+    width: 28px; height: 10px;
+    background: #7a5230;
+    border-radius: 2px;
+    margin: 5px 14px 0;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+  }
+  @keyframes trackScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* rails */
+  #rails {
+    position: fixed;
+    bottom: 42px; left: 0; right: 0;
+    height: 20px;
+    z-index: 6;
+    pointer-events: none;
+  }
+  #rails::before, #rails::after {
+    content:'';
+    position: absolute;
+    left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #aaa, #ddd 50%, #aaa);
+    border-radius: 2px;
+  }
+  #rails::before { top: 2px; }
+  #rails::after  { top: 14px; }
+
+  /* ========== TRAIN ========== */
+  #train-wrap {
+    position: fixed;
+    bottom: 52px;
+    left: -420px;
+    z-index: 7;
+    pointer-events: none;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    transition: bottom 0.3s ease;
+  }
+  #train-wrap.running {
+    animation: trainRide var(--train-speed, 8s) linear infinite;
+  }
+  @keyframes trainRide {
+    0%   { left: -420px; }
+    100% { left: 110%; }
+  }
+
+  .train-car {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* engine */
+  .engine-body {
+    width: 110px; height: 56px;
+    background: linear-gradient(135deg, #E53935, #B71C1C);
+    border-radius: 10px 18px 4px 4px;
+    position: relative;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+  }
+  .engine-body::before {
+    /* cab window */
+    content:'';
+    position: absolute;
+    top: 8px; right: 10px;
+    width: 28px; height: 22px;
+    background: #B3E5FC;
+    border-radius: 5px;
+    border: 2px solid rgba(255,255,255,0.5);
+  }
+  .engine-body::after {
+    /* stripe */
+    content:'';
+    position: absolute;
+    bottom: 10px; left: 0; right: 0;
+    height: 5px;
+    background: #FFD600;
+    border-radius: 0 8px 0 0;
+  }
+  .engine-nose {
+    position: absolute;
+    left: -22px; bottom: 10px;
+    width: 24px; height: 32px;
+    background: linear-gradient(135deg, #E53935, #B71C1C);
+    border-radius: 10px 0 0 10px;
+  }
+  .chimney {
+    position: absolute;
+    top: -14px; left: 20px;
+    width: 14px; height: 16px;
+    background: #333;
+    border-radius: 4px 4px 0 0;
+  }
+
+  /* passenger car */
+  .car-body {
+    width: 90px; height: 50px;
+    border-radius: 6px 6px 4px 4px;
+    position: relative;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.35);
+  }
+  .car-body.car-1 { background: linear-gradient(135deg, #1565C0, #0D47A1); }
+  .car-body.car-2 { background: linear-gradient(135deg, #2E7D32, #1B5E20); }
+  .car-body.car-3 { background: linear-gradient(135deg, #E65100, #BF360C); }
+
+  .car-windows {
+    position: absolute;
+    top: 9px; left: 8px; right: 8px;
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+  }
+  .win {
+    width: 18px; height: 16px;
+    background: #B3E5FC;
+    border-radius: 4px;
+    border: 2px solid rgba(255,255,255,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .win::after {
+    /* curtain */
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height: 6px;
+    background: rgba(255,200,100,0.5);
+    border-radius: 2px;
+  }
+  .car-body::after {
+    /* stripe */
+    content:'';
+    position: absolute;
+    bottom: 8px; left: 0; right: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.25);
+  }
+
+  /* connector between cars */
+  .connector {
+    width: 8px; height: 8px;
+    background: #555;
+    border-radius: 2px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+
+  /* wheels (shared) */
+  .wheels {
+    display: flex;
+    gap: 14px;
+    margin-top: 3px;
+  }
+  .wheel {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #888, #333);
+    border: 3px solid #555;
+    animation: wheelSpin var(--train-speed, 8s) linear infinite;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  @keyframes wheelSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* smoke puffs */
+  .smoke {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(200,200,200,0.7);
+    pointer-events: none;
+    animation: smokePuff 1.4s ease-out forwards;
+  }
+  @keyframes smokePuff {
+    0%   { transform: translate(0, 0) scale(0.3); opacity: 0.8; }
+    100% { transform: translate(-30px, -60px) scale(1.8); opacity: 0; }
+  }
+
+  /* train button */
+  .btn-train { background: linear-gradient(135deg, #E53935, #B71C1C); }
+
 </style>
 </head>
 <body>
@@ -260,6 +491,52 @@
 <div id="rainbow"></div>
 <div id="sun"></div>
 <div id="moon"></div>
+
+<!-- GROUND -->
+<div id="ground"></div>
+<!-- TRACK SLEEPERS -->
+<div id="track"><div id="track-inner"></div></div>
+<!-- RAILS -->
+<div id="rails"></div>
+<!-- TRAIN -->
+<div id="train-wrap">
+  <div class="train-car">
+    <div class="engine-body">
+      <div class="engine-nose"></div>
+      <div class="chimney" id="chimney"></div>
+    </div>
+    <div class="wheels">
+      <div class="wheel"></div><div class="wheel"></div><div class="wheel"></div>
+    </div>
+  </div>
+  <div class="connector"></div>
+  <div class="train-car">
+    <div class="car-body car-1">
+      <div class="car-windows">
+        <div class="win"></div><div class="win"></div><div class="win"></div>
+      </div>
+    </div>
+    <div class="wheels"><div class="wheel"></div><div class="wheel"></div></div>
+  </div>
+  <div class="connector"></div>
+  <div class="train-car">
+    <div class="car-body car-2">
+      <div class="car-windows">
+        <div class="win"></div><div class="win"></div><div class="win"></div>
+      </div>
+    </div>
+    <div class="wheels"><div class="wheel"></div><div class="wheel"></div></div>
+  </div>
+  <div class="connector"></div>
+  <div class="train-car">
+    <div class="car-body car-3">
+      <div class="car-windows">
+        <div class="win"></div><div class="win"></div><div class="win"></div>
+      </div>
+    </div>
+    <div class="wheels"><div class="wheel"></div><div class="wheel"></div></div>
+  </div>
+</div>
 
 <div id="title">✨ わくわく おそら ✨</div>
 
@@ -296,6 +573,9 @@
     </button>
     <button class="sky-btn btn-moon" onclick="toggleMoon(this)">
       <span class="icon">🌕</span>おつきさま
+    </button>
+    <button class="sky-btn btn-train" onclick="toggleTrain(this)">
+      <span class="icon">🚃</span>でんしゃ
     </button>
   </div>
 </div>
@@ -546,6 +826,60 @@ function burstEmoji(emojis, btn) {
       document.body.appendChild(el);
       setTimeout(() => el.remove(), 2000);
     }, i * 80);
+  }
+}
+
+// ======================== TRAIN ========================
+// Generate sleepers
+const trackInner = document.getElementById('track-inner');
+for (let i = 0; i < 60; i++) {
+  const sl = document.createElement('div');
+  sl.className = 'sleeper';
+  trackInner.appendChild(sl);
+}
+// duplicate for seamless loop
+trackInner.innerHTML += trackInner.innerHTML;
+
+let trainOn = false;
+let smokeInterval = null;
+
+function toggleTrain(btn) {
+  trainOn = !trainOn;
+  const wrap = document.getElementById('train-wrap');
+  btn.classList.toggle('active', trainOn);
+
+  if (trainOn) {
+    wrap.style.setProperty('--train-speed', '9s');
+    wrap.classList.add('running');
+    burstEmoji(['🚃','🚂','💨','⭐'], btn);
+
+    // smoke puffs from chimney
+    smokeInterval = setInterval(() => {
+      const chimney = document.getElementById('chimney');
+      if (!chimney) return;
+      const rect = chimney.getBoundingClientRect();
+      for (let i = 0; i < 2; i++) {
+        setTimeout(() => {
+          const s = document.createElement('div');
+          s.className = 'smoke';
+          const size = 14 + Math.random() * 16;
+          s.style.cssText = `
+            width:${size}px; height:${size}px;
+            left:${rect.left + rect.width/2 + (Math.random()-0.5)*10}px;
+            top:${rect.top - 4}px;
+            position:fixed;
+            z-index:8;
+            animation-delay:${i*0.2}s;
+          `;
+          document.body.appendChild(s);
+          setTimeout(() => s.remove(), 1600);
+        }, i * 200);
+      }
+    }, 700);
+  } else {
+    wrap.classList.remove('running');
+    wrap.style.left = '-420px';
+    clearInterval(smokeInterval);
   }
 }
 
