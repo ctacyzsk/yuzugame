@@ -3,705 +3,749 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>✨ わくわくおそらゲーム ✨</title>
+<title>✨ わくわく おそら＆でんしゃ ✨</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  :root {
-    --sky1: #87CEEB;
-    --sky2: #B0E0FF;
-    --transition: 2s ease;
-  }
+:root {
+  --sky1: #FF8C69;
+  --sky2: #FFD9A0;
+  --transition: 2s ease;
+  --panel-h: 52vh; /* 下パネルの高さ */
+}
 
-  body {
-    font-family: 'Zen Maru Gothic', sans-serif;
-    height: 100dvh;
-    overflow: hidden;
-    touch-action: manipulation;
-    user-select: none;
-  }
+body {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  height: 100dvh;
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+}
 
-  /* ========== SKY ========== */
-  #sky {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 100%);
-    transition: background var(--transition);
-    z-index: 0;
-  }
+/* =============================================
+   SKY ZONE (上半分・固定)
+   ============================================= */
+#sky-zone {
+  position: relative;
+  flex: 1 1 auto;
+  overflow: hidden;
+  min-height: 0;
+}
 
-  /* ========== CLOUDS ========== */
-  .cloud {
-    position: absolute;
-    opacity: 0;
-    transition: opacity 2s ease;
-    pointer-events: none;
-  }
-  .cloud.visible { opacity: 1; }
-  .cloud svg { filter: drop-shadow(0 4px 12px rgba(255,255,255,0.6)); }
+#sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 100%);
+  transition: background var(--transition);
+  z-index: 0;
+}
 
-  /* ========== SUN ========== */
-  #sun {
-    position: absolute;
-    width: 110px; height: 110px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #FFF176, #FFD700 50%, #FF8C00);
-    box-shadow: 0 0 60px 30px rgba(255,220,0,0.5), 0 0 120px 60px rgba(255,180,0,0.25);
-    top: 8%;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: all var(--transition);
-    pointer-events: none;
-  }
-  #sun::after {
-    content:'';
-    position:absolute;
-    inset:-24px;
-    border-radius:50%;
-    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,220,0,0.25) 20deg, transparent 40deg);
-    animation: sunRay 8s linear infinite;
-  }
-  @keyframes sunRay { to { transform: rotate(360deg); } }
+/* aurora */
+#aurora {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 3s ease;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(180deg,
+    rgba(0,255,150,0.10) 0%,
+    rgba(0,200,255,0.07) 30%,
+    rgba(180,0,255,0.06) 60%,
+    transparent 100%);
+  animation: auroraPulse 6s ease-in-out infinite;
+}
+@keyframes auroraPulse {
+  0%,100% { opacity: var(--ao,0); transform: scaleX(1); }
+  50%     { opacity: calc(var(--ao,0)*1.6); transform: scaleX(1.04); }
+}
 
-  /* ========== MOON ========== */
-  #moon {
-    position: absolute;
-    width: 90px; height: 90px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #FFFFF0, #E8E8D0 60%, #C8C8A8);
-    box-shadow: 0 0 40px 20px rgba(220,220,180,0.35), inset -12px -8px 0 rgba(180,180,150,0.3);
-    top: 8%;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: all var(--transition);
-    pointer-events: none;
-  }
+/* rainbow */
+#rainbow {
+  position: absolute;
+  width: 560px; height: 280px;
+  border-radius: 280px 280px 0 0;
+  border: 26px solid transparent;
+  border-image: linear-gradient(180deg,
+    rgba(255,100,100,0.7) 0%, rgba(255,165,0,0.7) 17%,
+    rgba(255,240,0,0.7) 34%, rgba(100,220,100,0.7) 50%,
+    rgba(0,180,255,0.7) 67%, rgba(130,80,240,0.7) 84%,
+    rgba(220,80,220,0.7) 100%) 1;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 2s ease;
+  pointer-events: none;
+  filter: blur(2px);
+  z-index: 2;
+}
 
-  /* ========== STARS ========== */
-  .star {
-    position: absolute;
-    border-radius: 50%;
-    background: white;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 1.5s ease;
-  }
-  .star.twinkle {
-    animation: twinkle var(--dur, 2s) ease-in-out infinite;
-  }
-  @keyframes twinkle {
-    0%,100% { transform: scale(1); opacity: var(--op, 0.8); }
-    50%      { transform: scale(1.6); opacity: 1; }
-  }
+/* sun */
+#sun {
+  position: absolute;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #FFF9C4, #FFB347 60%, #FF6347);
+  box-shadow: 0 0 55px 26px rgba(255,220,0,0.5), 0 0 110px 55px rgba(255,180,0,0.22);
+  top: 10%; left: 50%;
+  transform: translateX(-50%);
+  transition: all var(--transition);
+  pointer-events: none;
+  z-index: 3;
+}
+#sun::after {
+  content:'';
+  position: absolute;
+  inset: -22px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(255,220,0,0.22) 20deg, transparent 40deg);
+  animation: sunRay 8s linear infinite;
+}
+@keyframes sunRay { to { transform: rotate(360deg); } }
 
-  /* ========== SHOOTING STAR ========== */
-  .shooting {
-    position: absolute;
-    width: 120px; height: 2px;
-    background: linear-gradient(90deg, white, transparent);
-    border-radius: 2px;
-    opacity: 0;
-    pointer-events: none;
-  }
-  @keyframes shoot {
-    0%   { opacity: 1; transform: translate(0,0) rotate(-30deg); }
-    100% { opacity: 0; transform: translate(280px, 160px) rotate(-30deg); }
-  }
+/* moon */
+#moon {
+  position: absolute;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #FFFFF0, #E8E8D0 60%, #C8C8A8);
+  box-shadow: 0 0 35px 18px rgba(220,220,180,0.35),
+              inset -18px -10px 0 rgba(100,100,80,0.22);
+  top: 10%; left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: all var(--transition);
+  pointer-events: none;
+  z-index: 3;
+}
 
-  /* ========== RAINBOW ========== */
-  #rainbow {
-    position: absolute;
-    width: 600px; height: 300px;
-    border-radius: 300px 300px 0 0;
-    border: 28px solid transparent;
-    border-image: linear-gradient(180deg,
-      rgba(255,100,100,0.7) 0%, rgba(255,165,0,0.7) 17%,
-      rgba(255,240,0,0.7) 34%, rgba(100,220,100,0.7) 50%,
-      rgba(0,180,255,0.7) 67%, rgba(130,80,240,0.7) 84%,
-      rgba(220,80,220,0.7) 100%) 1;
-    bottom: 10%; left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: opacity 2s ease;
-    pointer-events: none;
-    filter: blur(2px);
-  }
+/* stars */
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 1.5s ease;
+}
+.star.twinkle { animation: twinkle var(--dur,2s) ease-in-out infinite; }
+@keyframes twinkle {
+  0%,100% { transform:scale(1); opacity: var(--op,0.8); }
+  50%      { transform:scale(1.6); opacity:1; }
+}
 
-  /* ========== FIREFLIES ========== */
-  .firefly {
-    position: absolute;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #ADFF2F;
-    box-shadow: 0 0 10px 4px rgba(173,255,47,0.7);
-    opacity: 0;
-    pointer-events: none;
-  }
-  @keyframes flyMove {
-    0%   { transform: translate(0,0); opacity:0; }
-    20%  { opacity:1; }
-    80%  { opacity:1; }
-    100% { transform: translate(var(--dx,60px), var(--dy,-40px)); opacity:0; }
-  }
+/* clouds */
+.cloud {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 2s ease;
+  pointer-events: none;
+  z-index: 4;
+}
+.cloud.visible { opacity: 1; }
+.cloud svg { filter: drop-shadow(0 4px 12px rgba(255,255,255,0.5)); }
+@keyframes cloudDrift {
+  0%   { transform: translateX(0px); }
+  100% { transform: translateX(20px); }
+}
 
-  /* ========== OVERLAY EMOJI PARTICLES ========== */
-  .emoji-burst {
-    position: fixed;
-    font-size: 2rem;
-    pointer-events: none;
-    z-index: 100;
-    animation: emojiFloat 1.8s ease-out forwards;
-  }
-  @keyframes emojiFloat {
-    0%   { opacity:1; transform: translateY(0) scale(1); }
-    100% { opacity:0; transform: translateY(-120px) scale(1.5); }
-  }
+/* shooting star */
+.shooting {
+  position: absolute;
+  width: 110px; height: 2px;
+  background: linear-gradient(90deg, white, transparent);
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+@keyframes shoot {
+  0%   { opacity:1; transform: translate(0,0) rotate(-30deg); }
+  100% { opacity:0; transform: translate(260px,150px) rotate(-30deg); }
+}
 
-  /* ========== BUTTONS AREA ========== */
-  #ui {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    padding: 12px 10px 20px;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-  }
+/* fireflies */
+.firefly {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #ADFF2F;
+  box-shadow: 0 0 10px 4px rgba(173,255,47,0.7);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+@keyframes flyMove {
+  0%   { transform:translate(0,0); opacity:0; }
+  20%  { opacity:1; }
+  80%  { opacity:1; }
+  100% { transform:translate(var(--dx,60px),var(--dy,-40px)); opacity:0; }
+}
 
-  #btn-row1, #btn-row2 {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+/* sky title */
+#sky-title {
+  position: absolute;
+  top: 10px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  white-space: nowrap;
+  z-index: 20;
+  pointer-events: none;
+  letter-spacing: 0.05em;
+}
 
-  .sky-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    border: none;
-    border-radius: 22px;
-    padding: 10px 14px;
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-    box-shadow: 0 5px 14px rgba(0,0,0,0.22);
-    color: white;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    min-width: 66px;
-    position: relative;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .sky-btn .icon { font-size: 1.8rem; line-height: 1; }
-  .sky-btn:active { transform: scale(0.91); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+/* sky buttons */
+#sky-ui {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 6px 8px 8px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  background: linear-gradient(transparent, rgba(0,0,0,0.12));
+}
+.sky-row { display:flex; gap:7px; justify-content:center; flex-wrap:wrap; }
 
-  .btn-morning  { background: linear-gradient(135deg, #FFB347, #FFD700); }
-  .btn-noon     { background: linear-gradient(135deg, #29B6F6, #0288D1); }
-  .btn-sunset   { background: linear-gradient(135deg, #FF7043, #FF4081); }
-  .btn-dusk     { background: linear-gradient(135deg, #7B4FA8, #4A148C); }
-  .btn-night    { background: linear-gradient(135deg, #1A237E, #0D0D2B); }
-  .btn-rainbow  { background: linear-gradient(135deg, #FF6B6B, #FFE66D, #4ECDC4); }
-  .btn-shoot    { background: linear-gradient(135deg, #667eea, #764ba2); }
-  .btn-firefly  { background: linear-gradient(135deg, #134E5E, #71B280); }
-  .btn-cloud    { background: linear-gradient(135deg, #89CFF0, #aad4f5); }
-  .btn-moon     { background: linear-gradient(135deg, #4a5a8a, #223); }
+.sky-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border: none;
+  border-radius: 18px;
+  padding: 7px 11px;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.22);
+  color: white;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  min-width: 56px;
+  -webkit-tap-highlight-color: transparent;
+}
+.sky-btn .icon { font-size: 1.5rem; line-height: 1; }
+.sky-btn:active { transform: scale(0.91); }
+.sky-btn.active { box-shadow: 0 0 0 3px white, 0 4px 12px rgba(0,0,0,0.25); }
 
-  /* active scene highlight */
-  .sky-btn.active { box-shadow: 0 0 0 4px white, 0 5px 14px rgba(0,0,0,0.3); }
+.btn-morning { background: linear-gradient(135deg,#FFB347,#FFD700); }
+.btn-noon    { background: linear-gradient(135deg,#29B6F6,#0288D1); }
+.btn-sunset  { background: linear-gradient(135deg,#FF7043,#FF4081); }
+.btn-dusk    { background: linear-gradient(135deg,#7B4FA8,#4A148C); }
+.btn-night   { background: linear-gradient(135deg,#1A237E,#0D0D2B); }
+.btn-rainbow { background: linear-gradient(135deg,#FF6B6B,#FFE66D,#4ECDC4); }
+.btn-shoot   { background: linear-gradient(135deg,#667eea,#764ba2); }
+.btn-firefly { background: linear-gradient(135deg,#134E5E,#71B280); }
+.btn-cloud   { background: linear-gradient(135deg,#89CFF0,#aad4f5); }
+.btn-moon    { background: linear-gradient(135deg,#4a5a8a,#1a1a33); }
 
-  /* ========== TITLE ========== */
-  #title {
-    position: fixed;
-    top: 14px; left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.25rem;
-    font-weight: 900;
-    color: white;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    white-space: nowrap;
-    z-index: 10;
-    letter-spacing: 0.05em;
-    pointer-events: none;
-  }
+/* emoji burst */
+.emoji-burst {
+  position: fixed;
+  font-size: 1.8rem;
+  pointer-events: none;
+  z-index: 200;
+  animation: emojiFloat 1.8s ease-out forwards;
+}
+@keyframes emojiFloat {
+  0%   { opacity:1; transform:translateY(0) scale(1); }
+  100% { opacity:0; transform:translateY(-110px) scale(1.5); }
+}
 
-  /* ========== AURORA ========== */
-  #aurora {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 3s ease;
-    pointer-events: none;
-    background: linear-gradient(180deg,
-      rgba(0,255,150,0.08) 0%,
-      rgba(0,200,255,0.06) 30%,
-      rgba(180,0,255,0.05) 60%,
-      transparent 100%);
-    animation: auroraPulse 6s ease-in-out infinite;
-  }
-  @keyframes auroraPulse {
-    0%,100% { opacity: var(--ao, 0); transform: scaleX(1); }
-    50%     { opacity: calc(var(--ao, 0) * 1.6); transform: scaleX(1.05); }
-  }
+/* =============================================
+   DIVIDER
+   ============================================= */
+#divider {
+  height: 4px;
+  background: linear-gradient(90deg, #a08060, #c8a870, #a08060);
+  flex-shrink: 0;
+  z-index: 30;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
 
-  /* ========== GROUND & TRACK ========== */
-  #ground {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 72px;
-    z-index: 4;
-    pointer-events: none;
-  }
+/* =============================================
+   TRAIN ZONE (下半分)
+   ============================================= */
+#train-zone {
+  height: var(--panel-h);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #7B3F1A 0%, #4A2510 100%);
+  overflow: hidden;
+  position: relative;
+  z-index: 25;
+}
 
-  /* grass strip */
-  #ground::before {
-    content:'';
-    position: absolute;
-    bottom: 42px; left: 0; right: 0;
-    height: 20px;
-    background: linear-gradient(180deg, #5DBB5D 0%, #3E9E3E 100%);
-    border-radius: 0;
-  }
+/* --- Tab bar --- */
+#train-tabs {
+  display: flex;
+  gap: 0;
+  background: #3A1A08;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+#train-tabs::-webkit-scrollbar { display: none; }
 
-  /* dirt / ground base */
-  #ground::after {
-    content:'';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 44px;
-    background: linear-gradient(180deg, #8B6914 0%, #6B4F10 100%);
-  }
+.train-tab {
+  flex-shrink: 0;
+  padding: 9px 16px;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #aaa;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.train-tab.active {
+  color: #FFD700;
+  border-bottom-color: #FFD700;
+}
+.train-tab .tab-icon { font-size: 1.1rem; }
 
-  /* rail sleepers (ties) */
-  #track {
-    position: fixed;
-    bottom: 42px; left: 0; right: 0;
-    height: 20px;
-    z-index: 5;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  #track-inner {
-    display: flex;
-    gap: 0;
-    animation: trackScroll 0.6s linear infinite;
-    width: 200%;
-  }
-  .sleeper {
-    flex-shrink: 0;
-    width: 28px; height: 10px;
-    background: #7a5230;
-    border-radius: 2px;
-    margin: 5px 14px 0;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.3);
-  }
-  @keyframes trackScroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
+/* --- Train panel content --- */
+.train-panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+.train-panel.active { display: flex; }
 
-  /* rails */
-  #rails {
-    position: fixed;
-    bottom: 42px; left: 0; right: 0;
-    height: 20px;
-    z-index: 6;
-    pointer-events: none;
-  }
-  #rails::before, #rails::after {
-    content:'';
-    position: absolute;
-    left: 0; right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #aaa, #ddd 50%, #aaa);
-    border-radius: 2px;
-  }
-  #rails::before { top: 2px; }
-  #rails::after  { top: 14px; }
+/* =============================================
+   IKOMA CABLE PANEL
+   ============================================= */
+#panel-ikoma {
+  background: transparent;
+}
 
-  /* ========== TRAIN ========== */
-  #train-wrap {
-    position: fixed;
-    bottom: 52px;
-    left: -420px;
-    z-index: 7;
-    pointer-events: none;
-    display: flex;
-    align-items: flex-end;
-    gap: 4px;
-    transition: bottom 0.3s ease;
-  }
-  #train-wrap.running {
-    animation: trainRide var(--train-speed, 8s) linear infinite;
-  }
-  @keyframes trainRide {
-    0%   { left: -420px; }
-    100% { left: 110%; }
-  }
+/* stage area */
+.ikoma-stage {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
 
-  .train-car {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+/* night city glow - always subtle */
+.city-lights {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 5%  40px, #fff, transparent),
+    radial-gradient(2px 2px at 15% 80px, #ffcc00, transparent),
+    radial-gradient(3px 3px at 25% 55px, #fff, transparent),
+    radial-gradient(2px 2px at 40% 95px, #ff9900, transparent),
+    radial-gradient(2px 2px at 60% 45px, #fff, transparent),
+    radial-gradient(3px 3px at 75% 85px, #00ccff, transparent),
+    radial-gradient(2px 2px at 85% 65px, #ff0099, transparent),
+    radial-gradient(2px 2px at 95% 100px, #fff, transparent);
+  background-repeat: repeat-x;
+  background-size: 400px 100%;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+.ikoma-rail {
+  position: absolute;
+  width: 200%; height: 5px;
+  background: repeating-linear-gradient(to right, #444 0, #444 18px, #aaa 18px, #aaa 36px);
+  opacity: 0.7;
+  z-index: 1;
+  display: none;
+}
+.ikoma-rail.show { display: block; }
+.rail-up   { top: 38%; }
+.rail-down { top: 62%; }
 
-  /* engine */
-  .engine-body {
-    width: 110px; height: 56px;
-    background: linear-gradient(135deg, #E53935, #B71C1C);
-    border-radius: 10px 18px 4px 4px;
-    position: relative;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
-  }
-  .engine-body::before {
-    /* cab window */
-    content:'';
-    position: absolute;
-    top: 8px; right: 10px;
-    width: 28px; height: 22px;
-    background: #B3E5FC;
-    border-radius: 5px;
-    border: 2px solid rgba(255,255,255,0.5);
-  }
-  .engine-body::after {
-    /* stripe */
-    content:'';
-    position: absolute;
-    bottom: 10px; left: 0; right: 0;
-    height: 5px;
-    background: #FFD600;
-    border-radius: 0 8px 0 0;
-  }
-  .engine-nose {
-    position: absolute;
-    left: -22px; bottom: 10px;
-    width: 24px; height: 32px;
-    background: linear-gradient(135deg, #E53935, #B71C1C);
-    border-radius: 10px 0 0 10px;
-  }
-  .chimney {
-    position: absolute;
-    top: -14px; left: 20px;
-    width: 14px; height: 16px;
-    background: #333;
-    border-radius: 4px 4px 0 0;
-  }
+/* ikoma train images */
+.ikoma-train {
+  position: absolute;
+  height: 54px;
+  display: none;
+  z-index: 2;
+}
 
-  /* passenger car */
-  .car-body {
-    width: 90px; height: 50px;
-    border-radius: 6px 6px 4px 4px;
-    position: relative;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.35);
-  }
-  .car-body.car-1 { background: linear-gradient(135deg, #1565C0, #0D47A1); }
-  .car-body.car-2 { background: linear-gradient(135deg, #2E7D32, #1B5E20); }
-  .car-body.car-3 { background: linear-gradient(135deg, #E65100, #BF360C); }
+@keyframes ikomaUp   { 0%{left:-90px;top:32%} 100%{left:110%;top:32%} }
+@keyframes ikomaDown { 0%{left:110%;top:56%} 100%{left:-90px;top:56%} }
+@keyframes ikomaLoop { 0%{left:-90px;top:42%} 100%{left:110%;top:42%} }
+@keyframes ikomaRand { 0%{left:8%;top:25%} 50%{left:50%;top:55%} 100%{left:8%;top:25%} }
 
-  .car-windows {
-    position: absolute;
-    top: 9px; left: 8px; right: 8px;
-    display: flex;
-    gap: 7px;
-    justify-content: center;
-  }
-  .win {
-    width: 18px; height: 16px;
-    background: #B3E5FC;
-    border-radius: 4px;
-    border: 2px solid rgba(255,255,255,0.4);
-    position: relative;
-    overflow: hidden;
-  }
-  .win::after {
-    /* curtain */
-    content:'';
-    position:absolute;
-    top:0; left:0; right:0;
-    height: 6px;
-    background: rgba(255,200,100,0.5);
-    border-radius: 2px;
-  }
-  .car-body::after {
-    /* stripe */
-    content:'';
-    position: absolute;
-    bottom: 8px; left: 0; right: 0;
-    height: 4px;
-    background: rgba(255,255,255,0.25);
-  }
+.run-up   { display:block; animation: ikomaUp   linear forwards; }
+.run-down { display:block; animation: ikomaDown linear forwards; }
+.run-loop { display:block; animation: ikomaLoop 10s linear infinite; }
+.run-rand { display:block; animation: ikomaRand 6s ease-in-out infinite; }
 
-  /* connector between cars */
-  .connector {
-    width: 8px; height: 8px;
-    background: #555;
-    border-radius: 2px;
-    margin-bottom: 8px;
-    flex-shrink: 0;
-  }
+/* speed indicator */
+.speed-badge {
+  position: absolute;
+  top: 6px; right: 8px;
+  background: rgba(0,0,0,0.5);
+  color: #FFD700;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  z-index: 10;
+  pointer-events: none;
+}
 
-  /* wheels (shared) */
-  .wheels {
-    display: flex;
-    gap: 14px;
-    margin-top: 3px;
-  }
-  .wheel {
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #888, #333);
-    border: 3px solid #555;
-    animation: wheelSpin var(--train-speed, 8s) linear infinite;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-  }
-  @keyframes wheelSpin {
-    to { transform: rotate(360deg); }
-  }
+/* ikoma buttons area */
+.ikoma-controls {
+  flex-shrink: 0;
+  padding: 6px 8px;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-  /* smoke puffs */
-  .smoke {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(200,200,200,0.7);
-    pointer-events: none;
-    animation: smokePuff 1.4s ease-out forwards;
-  }
-  @keyframes smokePuff {
-    0%   { transform: translate(0, 0) scale(0.3); opacity: 0.8; }
-    100% { transform: translate(-30px, -60px) scale(1.8); opacity: 0; }
-  }
+/* picture buttons */
+.ikoma-pics {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.pic-btn {
+  width: 58px; height: 58px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  overflow: hidden;
+  cursor: pointer;
+  background: #333;
+  flex-shrink: 0;
+  transition: border-color 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pic-btn img { width:100%; height:100%; object-fit:cover; display:block; }
+.pic-btn.active { border-color: #FFD700; transform: scale(1.08); }
+.pic-btn:active { transform: scale(0.93); }
 
-  /* train button */
-  .btn-train { background: linear-gradient(135deg, #E53935, #B71C1C); }
+/* bottom row: SE + speed + seekbar */
+.ikoma-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ikoma-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.se-btn {
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s;
+}
+.se-btn:active { background: rgba(255,255,255,0.25); }
+.spd-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #FFD700;
+  background: rgba(255,215,0,0.15);
+  color: #FFD700;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 900;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.spd-btn:active { background: rgba(255,215,0,0.35); }
+
+.seekbar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+}
+#ikoma-seekbar {
+  flex: 1;
+  cursor: pointer;
+  accent-color: #FFD700;
+  height: 4px;
+}
+#ikoma-time {
+  color: rgba(255,255,255,0.6);
+  font-size: 0.6rem;
+  white-space: nowrap;
+  min-width: 56px;
+  text-align: right;
+}
+
+/* =============================================
+   COMING SOON PANEL (placeholder for JR etc.)
+   ============================================= */
+.coming-soon-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: rgba(255,255,255,0.6);
+  background: transparent;
+}
+.coming-soon-panel .cs-icon { font-size: 3rem; }
+.coming-soon-panel .cs-text { font-size: 0.9rem; font-weight: 700; }
+.coming-soon-panel .cs-sub  { font-size: 0.7rem; color: rgba(255,255,255,0.3); }
 
 </style>
 </head>
 <body>
 
-<div id="sky"></div>
-<div id="aurora"></div>
-<div id="rainbow"></div>
-<div id="sun"></div>
-<div id="moon"></div>
+<!-- ============ SKY ZONE ============ -->
+<div id="sky-zone">
+  <div id="sky"></div>
+  <div id="aurora"></div>
+  <div id="rainbow"></div>
+  <div id="sun"></div>
+  <div id="moon"></div>
 
-<!-- GROUND -->
-<div id="ground"></div>
-<!-- TRACK SLEEPERS -->
-<div id="track"><div id="track-inner"></div></div>
-<!-- RAILS -->
-<div id="rails"></div>
-<!-- TRAIN -->
-<div id="train-wrap">
-  <div class="train-car">
-    <div class="engine-body">
-      <div class="engine-nose"></div>
-      <div class="chimney" id="chimney"></div>
+  <div id="sky-title">✨ わくわく おそら ✨</div>
+
+  <div id="sky-ui">
+    <div class="sky-row">
+      <button class="sky-btn btn-morning active" onclick="setScene('morning',this)">
+        <span class="icon">🌅</span>あさ
+      </button>
+      <button class="sky-btn btn-noon" onclick="setScene('noon',this)">
+        <span class="icon">☀️</span>ひる
+      </button>
+      <button class="sky-btn btn-sunset" onclick="setScene('sunset',this)">
+        <span class="icon">🌇</span>ゆうやけ
+      </button>
+      <button class="sky-btn btn-dusk" onclick="setScene('dusk',this)">
+        <span class="icon">🌆</span>たそがれ
+      </button>
+      <button class="sky-btn btn-night" onclick="setScene('night',this)">
+        <span class="icon">🌃</span>よる
+      </button>
     </div>
-    <div class="wheels">
-      <div class="wheel"></div><div class="wheel"></div><div class="wheel"></div>
+    <div class="sky-row">
+      <button class="sky-btn btn-rainbow" onclick="toggleRainbow(this)">
+        <span class="icon">🌈</span>にじ
+      </button>
+      <button class="sky-btn btn-shoot" onclick="shootStar(this)">
+        <span class="icon">🌠</span>ながれぼし
+      </button>
+      <button class="sky-btn btn-firefly" onclick="spawnFireflies(this)">
+        <span class="icon">✨</span>ほたる
+      </button>
+      <button class="sky-btn btn-cloud" onclick="toggleClouds(this)">
+        <span class="icon">☁️</span>くも
+      </button>
+      <button class="sky-btn btn-moon" onclick="toggleMoon(this)">
+        <span class="icon">🌕</span>おつきさま
+      </button>
     </div>
-  </div>
-  <div class="connector"></div>
-  <div class="train-car">
-    <div class="car-body car-1">
-      <div class="car-windows">
-        <div class="win"></div><div class="win"></div><div class="win"></div>
-      </div>
-    </div>
-    <div class="wheels"><div class="wheel"></div><div class="wheel"></div></div>
-  </div>
-  <div class="connector"></div>
-  <div class="train-car">
-    <div class="car-body car-2">
-      <div class="car-windows">
-        <div class="win"></div><div class="win"></div><div class="win"></div>
-      </div>
-    </div>
-    <div class="wheels"><div class="wheel"></div><div class="wheel"></div></div>
-  </div>
-  <div class="connector"></div>
-  <div class="train-car">
-    <div class="car-body car-3">
-      <div class="car-windows">
-        <div class="win"></div><div class="win"></div><div class="win"></div>
-      </div>
-    </div>
-    <div class="wheels"><div class="wheel"></div><div class="wheel"></div></div>
   </div>
 </div>
 
-<div id="title">✨ わくわく おそら ✨</div>
+<!-- ============ DIVIDER ============ -->
+<div id="divider"></div>
 
-<div id="ui">
-  <div id="btn-row1">
-    <button class="sky-btn btn-morning active" onclick="setScene('morning', this)">
-      <span class="icon">🌅</span>あさ
+<!-- ============ TRAIN ZONE ============ -->
+<div id="train-zone">
+
+  <!-- Tab bar -->
+  <div id="train-tabs">
+    <button class="train-tab active" onclick="switchTab('ikoma',this)">
+      <span class="tab-icon">🚠</span> 生駒ケーブル
     </button>
-    <button class="sky-btn btn-noon" onclick="setScene('noon', this)">
-      <span class="icon">☀️</span>ひる
+    <button class="train-tab" onclick="switchTab('kintetsu',this)">
+      <span class="tab-icon">🚃</span> 近鉄
     </button>
-    <button class="sky-btn btn-sunset" onclick="setScene('sunset', this)">
-      <span class="icon">🌇</span>ゆうやけ
+    <button class="train-tab" onclick="switchTab('jr',this)">
+      <span class="tab-icon">🚄</span> JR
     </button>
-    <button class="sky-btn btn-dusk" onclick="setScene('dusk', this)">
-      <span class="icon">🌆</span>たそがれ
-    </button>
-    <button class="sky-btn btn-night" onclick="setScene('night', this)">
-      <span class="icon">🌃</span>よる
-    </button>
+    <!-- ↓ 電車を追加するときはここにタブを足すだけ！ -->
   </div>
-  <div id="btn-row2">
-    <button class="sky-btn btn-rainbow" onclick="toggleRainbow(this)">
-      <span class="icon">🌈</span>にじ
-    </button>
-    <button class="sky-btn btn-shoot" onclick="shootStar(this)">
-      <span class="icon">🌠</span>ながれぼし
-    </button>
-    <button class="sky-btn btn-firefly" onclick="spawnFireflies(this)">
-      <span class="icon">✨</span>ほたる
-    </button>
-    <button class="sky-btn btn-cloud" onclick="toggleClouds(this)">
-      <span class="icon">☁️</span>くも
-    </button>
-    <button class="sky-btn btn-moon" onclick="toggleMoon(this)">
-      <span class="icon">🌕</span>おつきさま
-    </button>
-    <button class="sky-btn btn-train" onclick="toggleTrain(this)">
-      <span class="icon">🚃</span>でんしゃ
-    </button>
+
+  <!-- ===== 生駒ケーブル パネル ===== -->
+  <div class="train-panel active" id="panel-ikoma">
+    <div class="ikoma-stage">
+      <div class="city-lights"></div>
+      <div class="speed-badge" id="speed-badge">🚀 ×1.0</div>
+      <div class="ikoma-rail rail-up"   id="rail-up"></div>
+      <div class="ikoma-rail rail-down" id="rail-down"></div>
+      <img class="ikoma-train" id="itrain1">
+      <img class="ikoma-train" id="itrain2">
+    </div>
+
+    <div class="ikoma-controls">
+      <!-- 写真ボタン（音楽＋アニメ） -->
+      <div class="ikoma-pics">
+        <button class="pic-btn" onclick="iPlay(1,this)" title="のぼり">
+          <img src="picture_button/nobori1.jpeg" alt="のぼり"
+               onerror="this.parentElement.innerHTML='🚠<br><span style=font-size:0.5rem>のぼり</span>'">
+        </button>
+        <button class="pic-btn" onclick="iPlay(2,this)" title="すれちがい">
+          <img src="picture_button/surechigai1.jpg" alt="すれちがい"
+               onerror="this.parentElement.innerHTML='🔀<br><span style=font-size:0.5rem>すれちがい</span>'">
+        </button>
+        <button class="pic-btn" onclick="iPlay(3,this)" title="かえり">
+          <img src="picture_button/kaeri.jpg" alt="かえり"
+               onerror="this.parentElement.innerHTML='🌙<br><span style=font-size:0.5rem>かえり</span>'">
+        </button>
+        <button class="pic-btn" onclick="iPlay(4,this)" title="ゆったり">
+          <img src="picture_button/healing_bgm.jpeg" alt="ゆったり"
+               onerror="this.parentElement.innerHTML='🎵<br><span style=font-size:0.5rem>ゆったり</span>'">
+        </button>
+        <button class="pic-btn" onclick="iPlay(5,this)" title="スイート">
+          <img src="picture_button/sweet.jpg" alt="スイート"
+               onerror="this.parentElement.innerHTML='🍬<br><span style=font-size:0.5rem>スイート</span>'">
+        </button>
+        <button class="pic-btn" onclick="iPlay(6,this)" title="いこまん">
+          <img src="picture_button/train.png" alt="いこまん"
+               onerror="this.parentElement.innerHTML='🚃<br><span style=font-size:0.5rem>いこまん</span>'">
+        </button>
+      </div>
+
+      <div class="ikoma-bottom">
+        <!-- SE & speed -->
+        <div class="ikoma-row">
+          <button class="se-btn" onclick="iSE('ikoma_se.mp3')">🔔 発車</button>
+          <button class="se-btn" onclick="iSE('door.mp3')">🚪 ドア</button>
+          <button class="se-btn" onclick="iSE('announce.mp3')">🎤 アナウンス</button>
+          <button class="spd-btn" onclick="iSpeedUp()">⏩</button>
+          <button class="spd-btn" onclick="iSpeedDown()">⏪</button>
+        </div>
+        <!-- seekbar -->
+        <div class="seekbar-wrap">
+          <input type="range" id="ikoma-seekbar" value="0" min="0" step="0.1">
+          <div id="ikoma-time">0 / 0</div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- ===== 近鉄 パネル（Coming Soon） ===== -->
+  <div class="train-panel" id="panel-kintetsu">
+    <div class="coming-soon-panel">
+      <div class="cs-icon">🚃</div>
+      <div class="cs-text">近鉄 まもなく追加！</div>
+      <div class="cs-sub">Coming Soon...</div>
+    </div>
+  </div>
+
+  <!-- ===== JR パネル（Coming Soon） ===== -->
+  <div class="train-panel" id="panel-jr">
+    <div class="coming-soon-panel">
+      <div class="cs-icon">🚄</div>
+      <div class="cs-text">JR まもなく追加！</div>
+      <div class="cs-sub">Coming Soon...</div>
+    </div>
+  </div>
+
+</div><!-- /train-zone -->
+
 
 <script>
-// ======================== SCENES ========================
+/* ================================================
+   SKY ENGINE
+   ================================================ */
 const scenes = {
   morning: {
-    sky1: '#FF8C69', sky2: '#FFD9A0',
-    sunTop: '10%', sunOpacity: 1, sunSize: '110px',
-    sunColor: 'radial-gradient(circle at 40% 35%, #FFF9C4, #FFB347 60%, #FF6347)',
-    moonOpacity: 0,
-    starsOpacity: 0,
-    aurorOp: 0,
-    emoji: ['🌸','🐦','🌼','🌺']
+    sky1:'#FF8C69', sky2:'#FFD9A0',
+    sunTop:'10%', sunOp:1, sunSize:'100px',
+    sunBg:'radial-gradient(circle at 40% 35%,#FFF9C4,#FFB347 60%,#FF6347)',
+    moonOp:0, stars:0, aurora:0,
+    emoji:['🌸','🐦','🌼','🌺'],
+    panel1:'#7B3F1A', panel2:'#4A2510', tabs:'#3A1A08'
   },
   noon: {
-    sky1: '#1E90FF', sky2: '#87CEFA',
-    sunTop: '6%', sunOpacity: 1, sunSize: '120px',
-    sunColor: 'radial-gradient(circle at 40% 35%, #FFFFFF, #FFF176 40%, #FFD700)',
-    moonOpacity: 0,
-    starsOpacity: 0,
-    aurorOp: 0,
-    emoji: ['🌞','⛅','🦋','🌻']
+    sky1:'#1E90FF', sky2:'#87CEFA',
+    sunTop:'6%', sunOp:1, sunSize:'110px',
+    sunBg:'radial-gradient(circle at 40% 35%,#FFFFFF,#FFF176 40%,#FFD700)',
+    moonOp:0, stars:0, aurora:0,
+    emoji:['🌞','⛅','🦋','🌻'],
+    panel1:'#0A4A7A', panel2:'#062E50', tabs:'#041E36'
   },
   sunset: {
-    sky1: '#FF4500', sky2: '#FF8C00',
-    sunTop: '55%', sunOpacity: 1, sunSize: '130px',
-    sunColor: 'radial-gradient(circle at 40% 35%, #FFD700, #FF6347 60%, #DC143C)',
-    moonOpacity: 0,
-    starsOpacity: 0,
-    aurorOp: 0,
-    emoji: ['🌅','🔥','🦩','🌹']
+    sky1:'#FF4500', sky2:'#FF8C00',
+    sunTop:'50%', sunOp:1, sunSize:'120px',
+    sunBg:'radial-gradient(circle at 40% 35%,#FFD700,#FF6347 60%,#DC143C)',
+    moonOp:0, stars:0, aurora:0,
+    emoji:['🌅','🔥','🦩','🌹'],
+    panel1:'#5C1A00', panel2:'#3A0F00', tabs:'#280A00'
   },
   dusk: {
-    sky1: '#2C1654', sky2: '#E27D60',
-    sunTop: '80%', sunOpacity: 0.6, sunSize: '100px',
-    sunColor: 'radial-gradient(circle at 40% 35%, #FFA07A, #FF4500 60%, #8B0000)',
-    moonOpacity: 0.6,
-    starsOpacity: 0.5,
-    aurorOp: 0,
-    emoji: ['🌆','🦉','💜','🌙']
+    sky1:'#2C1654', sky2:'#E27D60',
+    sunTop:'80%', sunOp:0.55, sunSize:'95px',
+    sunBg:'radial-gradient(circle at 40% 35%,#FFA07A,#FF4500 60%,#8B0000)',
+    moonOp:0.6, stars:0.5, aurora:0,
+    emoji:['🌆','🦉','💜','🌙'],
+    panel1:'#1A0A30', panel2:'#100620', tabs:'#0A0318'
   },
   night: {
-    sky1: '#050520', sky2: '#0A0A40',
-    sunTop: '110%', sunOpacity: 0, sunSize: '110px',
-    sunColor: 'radial-gradient(circle at 40% 35%, #FFF176, #FFD700 50%, #FF8C00)',
-    moonOpacity: 1,
-    starsOpacity: 1,
-    aurorOp: 0.55,
-    emoji: ['🌟','🦇','⭐','💫','🌙']
+    sky1:'#050520', sky2:'#0A0A40',
+    sunTop:'120%', sunOp:0, sunSize:'100px',
+    sunBg:'radial-gradient(circle at 40% 35%,#FFF176,#FFD700 50%,#FF8C00)',
+    moonOp:1, stars:1, aurora:0.55,
+    emoji:['🌟','🦇','⭐','💫','🌙'],
+    panel1:'#04041A', panel2:'#020210', tabs:'#010108'
   }
 };
 
 let currentScene = 'morning';
 let rainbowOn = false;
-let cloudsOn = false;
-let moonOn = false;
+let cloudsOn  = false;
 let extraMoon = false;
 
-// ======================== STARS ========================
-const starContainer = document.getElementById('sky');
+// --- Stars ---
 const starEls = [];
-for (let i = 0; i < 90; i++) {
+for (let i = 0; i < 80; i++) {
   const s = document.createElement('div');
   s.className = 'star';
-  const size = Math.random() * 4 + 2;
-  s.style.cssText = `
-    width:${size}px; height:${size}px;
-    top:${Math.random()*65}%;
-    left:${Math.random()*100}%;
-    --op:${0.5 + Math.random()*0.5};
-    --dur:${1.5 + Math.random()*3}s;
-    animation-delay:${Math.random()*3}s;
-  `;
-  document.getElementById('sky').after(s);
-  document.body.insertBefore(s, document.getElementById('ui'));
+  const sz = Math.random()*3.5+1.5;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*70}%;left:${Math.random()*100}%;--op:${0.5+Math.random()*0.5};--dur:${1.5+Math.random()*3}s;animation-delay:${Math.random()*3}s`;
+  document.getElementById('sky-zone').appendChild(s);
   starEls.push(s);
 }
 
-// ======================== CLOUDS ========================
+// --- Clouds ---
 const cloudSVGs = [
-  `<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="100" cy="60" rx="90" ry="28" fill="rgba(255,255,255,0.92)"/>
-    <ellipse cx="70" cy="48" rx="50" ry="32" fill="rgba(255,255,255,0.95)"/>
-    <ellipse cx="130" cy="44" rx="44" ry="28" fill="rgba(255,255,255,0.93)"/>
-    <ellipse cx="100" cy="38" rx="36" ry="26" fill="white"/>
-  </svg>`,
-  `<svg viewBox="0 0 240 90" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="120" cy="68" rx="110" ry="26" fill="rgba(255,255,255,0.90)"/>
-    <ellipse cx="80" cy="52" rx="56" ry="34" fill="rgba(255,255,255,0.93)"/>
-    <ellipse cx="150" cy="46" rx="52" ry="30" fill="rgba(255,255,255,0.94)"/>
-    <ellipse cx="110" cy="36" rx="42" ry="30" fill="white"/>
-  </svg>`
+  `<svg viewBox="0 0 200 80"><ellipse cx="100" cy="60" rx="90" ry="28" fill="rgba(255,255,255,0.92)"/><ellipse cx="70" cy="48" rx="50" ry="32" fill="rgba(255,255,255,0.95)"/><ellipse cx="130" cy="44" rx="44" ry="28" fill="rgba(255,255,255,0.93)"/><ellipse cx="100" cy="38" rx="36" ry="26" fill="white"/></svg>`,
+  `<svg viewBox="0 0 240 90"><ellipse cx="120" cy="68" rx="110" ry="26" fill="rgba(255,255,255,0.90)"/><ellipse cx="80" cy="52" rx="56" ry="34" fill="rgba(255,255,255,0.93)"/><ellipse cx="150" cy="46" rx="52" ry="30" fill="rgba(255,255,255,0.94)"/><ellipse cx="110" cy="36" rx="42" ry="30" fill="white"/></svg>`
 ];
-
 const cloudEls = [];
-const cloudPositions = [
-  { top:'12%', left:'5%',  width:160 },
-  { top:'18%', right:'8%', width:190 },
-  { top:'28%', left:'28%', width:140 },
-];
-cloudPositions.forEach((pos, i) => {
+[{top:'12%',left:'5%',w:150},{top:'18%',right:'8%',w:175},{top:'28%',left:'28%',w:130}].forEach((p,i)=>{
   const c = document.createElement('div');
   c.className = 'cloud';
-  c.innerHTML = cloudSVGs[i % cloudSVGs.length];
-  c.style.top = pos.top;
-  if (pos.left)  c.style.left  = pos.left;
-  if (pos.right) c.style.right = pos.right;
-  c.querySelector('svg').style.width = pos.width + 'px';
-  document.body.insertBefore(c, document.getElementById('ui'));
+  c.innerHTML = cloudSVGs[i%2];
+  c.style.top = p.top;
+  if (p.left)  c.style.left  = p.left;
+  if (p.right) c.style.right = p.right;
+  c.querySelector('svg').style.width = p.w+'px';
+  c.style.animation = `cloudDrift ${14+i*3}s ease-in-out infinite alternate`;
+  document.getElementById('sky-zone').appendChild(c);
   cloudEls.push(c);
-  // gentle drift
-  c.style.animation = `cloudDrift ${14 + i * 3}s ease-in-out infinite alternate`;
 });
 
-const driftStyle = document.createElement('style');
-driftStyle.textContent = `
-  @keyframes cloudDrift {
-    0%   { transform: translateX(0px); }
-    100% { transform: translateX(${18}px); }
-  }
-`;
-document.head.appendChild(driftStyle);
-
-// ======================== SET SCENE ========================
 function setScene(name, btn) {
   currentScene = name;
   const s = scenes[name];
@@ -709,189 +753,210 @@ function setScene(name, btn) {
   const sun = document.getElementById('sun');
   const moon = document.getElementById('moon');
   const aurora = document.getElementById('aurora');
-
-  sky.style.setProperty('--sky1', s.sky1);
-  sky.style.setProperty('--sky2', s.sky2);
-  sky.style.background = `linear-gradient(180deg, ${s.sky1} 0%, ${s.sky2} 100%)`;
-
+  sky.style.background = `linear-gradient(180deg,${s.sky1} 0%,${s.sky2} 100%)`;
   sun.style.top = s.sunTop;
-  sun.style.opacity = s.sunOpacity;
-  sun.style.width = s.sunSize;
-  sun.style.height = s.sunSize;
-  sun.style.background = s.sunColor;
-
-  // moon follows scene unless user toggled
-  if (!extraMoon) {
-    moon.style.opacity = s.moonOpacity;
-    moonOn = s.moonOpacity > 0;
-  }
-
-  // stars
+  sun.style.opacity = s.sunOp;
+  sun.style.width = sun.style.height = s.sunSize;
+  sun.style.background = s.sunBg;
+  if (!extraMoon) moon.style.opacity = s.moonOp;
   starEls.forEach(st => {
-    st.style.opacity = s.starsOpacity > 0 ? '' : '0';
-    if (s.starsOpacity > 0) {
-      st.classList.add('twinkle');
-      st.style.opacity = null;
-    } else {
-      st.classList.remove('twinkle');
-      st.style.opacity = '0';
-    }
+    if (s.stars > 0) { st.classList.add('twinkle'); st.style.opacity = null; }
+    else             { st.classList.remove('twinkle'); st.style.opacity = '0'; }
   });
-
-  // aurora
-  aurora.style.setProperty('--ao', s.aurorOp);
-  aurora.style.opacity = s.aurorOp;
-
-  // active button
-  document.querySelectorAll('.sky-btn').forEach(b => b.classList.remove('active'));
+  aurora.style.setProperty('--ao', s.aurora);
+  aurora.style.opacity = s.aurora;
+  // 下パネルをお空の色と連動
+  const tz = document.getElementById('train-zone');
+  const tt = document.getElementById('train-tabs');
+  tz.style.background = `linear-gradient(180deg, ${s.panel1} 0%, ${s.panel2} 100%)`;
+  tt.style.background = s.tabs;
+  document.querySelectorAll('.sky-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-
   burstEmoji(s.emoji, btn);
 }
 
-// ======================== TOGGLE RAINBOW ========================
 function toggleRainbow(btn) {
   rainbowOn = !rainbowOn;
   document.getElementById('rainbow').style.opacity = rainbowOn ? '1' : '0';
   btn.classList.toggle('active', rainbowOn);
   if (rainbowOn) burstEmoji(['🌈','🌟','💛','💚','💙'], btn);
 }
-
-// ======================== TOGGLE CLOUDS ========================
 function toggleClouds(btn) {
   cloudsOn = !cloudsOn;
-  cloudEls.forEach(c => c.classList.toggle('visible', cloudsOn));
+  cloudEls.forEach(c=>c.classList.toggle('visible', cloudsOn));
   btn.classList.toggle('active', cloudsOn);
   if (cloudsOn) burstEmoji(['☁️','🌤️','⛅'], btn);
 }
-
-// ======================== TOGGLE MOON ========================
 function toggleMoon(btn) {
   extraMoon = !extraMoon;
-  moonOn = extraMoon;
-  document.getElementById('moon').style.opacity = extraMoon ? '1' : (scenes[currentScene].moonOpacity || '0');
+  document.getElementById('moon').style.opacity = extraMoon ? '1' : (scenes[currentScene].moonOp||'0');
   btn.classList.toggle('active', extraMoon);
   if (extraMoon) burstEmoji(['🌕','⭐','🌙','💫'], btn);
 }
-
-// ======================== SHOOTING STAR ========================
 function shootStar(btn) {
   burstEmoji(['🌠','⭐','💫'], btn);
-  for (let i = 0; i < 3; i++) {
-    setTimeout(() => {
-      const s = document.createElement('div');
-      s.className = 'shooting';
-      s.style.top  = (5 + Math.random() * 45) + '%';
-      s.style.left = (Math.random() * 40) + '%';
-      s.style.animation = 'shoot 1s ease-out forwards';
-      document.body.insertBefore(s, document.getElementById('ui'));
-      setTimeout(() => s.remove(), 1200);
-    }, i * 350);
-  }
+  for (let i=0;i<3;i++) setTimeout(()=>{
+    const s = document.createElement('div');
+    s.className = 'shooting';
+    s.style.top  = (5+Math.random()*40)+'%';
+    s.style.left = (Math.random()*40)+'%';
+    s.style.animation = 'shoot 1s ease-out forwards';
+    document.getElementById('sky-zone').appendChild(s);
+    setTimeout(()=>s.remove(),1200);
+  }, i*350);
 }
-
-// ======================== FIREFLIES ========================
 function spawnFireflies(btn) {
   burstEmoji(['✨','🌿','💚'], btn);
-  for (let i = 0; i < 18; i++) {
-    setTimeout(() => {
-      const f = document.createElement('div');
-      f.className = 'firefly';
-      f.style.left   = (20 + Math.random() * 60) + '%';
-      f.style.bottom = (15 + Math.random() * 40) + '%';
-      const dx = (Math.random() - 0.5) * 140;
-      const dy = -(20 + Math.random() * 100);
-      f.style.setProperty('--dx', dx + 'px');
-      f.style.setProperty('--dy', dy + 'px');
-      f.style.animation = `flyMove ${1.5 + Math.random()}s ease-out forwards`;
-      document.body.insertBefore(f, document.getElementById('ui'));
-      setTimeout(() => f.remove(), 2800);
-    }, i * 80);
-  }
+  for (let i=0;i<16;i++) setTimeout(()=>{
+    const f = document.createElement('div');
+    f.className = 'firefly';
+    f.style.left   = (20+Math.random()*60)+'%';
+    f.style.bottom = (30+Math.random()*40)+'%';
+    f.style.setProperty('--dx',(Math.random()-.5)*130+'px');
+    f.style.setProperty('--dy',-(20+Math.random()*90)+'px');
+    f.style.animation = `flyMove ${1.5+Math.random()}s ease-out forwards`;
+    document.getElementById('sky-zone').appendChild(f);
+    setTimeout(()=>f.remove(),2600);
+  }, i*80);
 }
 
-// ======================== EMOJI BURST ========================
 function burstEmoji(emojis, btn) {
   const rect = btn.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
+  const cx = rect.left + rect.width/2;
   const cy = rect.top;
-  for (let i = 0; i < Math.min(emojis.length, 4); i++) {
-    setTimeout(() => {
-      const el = document.createElement('div');
-      el.className = 'emoji-burst';
-      el.textContent = emojis[i % emojis.length];
-      el.style.left = (cx + (Math.random()-0.5)*60) + 'px';
-      el.style.top  = (cy - 10) + 'px';
-      el.style.animationDelay = (i * 0.08) + 's';
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 2000);
-    }, i * 80);
-  }
+  for (let i=0;i<Math.min(emojis.length,4);i++) setTimeout(()=>{
+    const el = document.createElement('div');
+    el.className = 'emoji-burst';
+    el.textContent = emojis[i%emojis.length];
+    el.style.left = (cx+(Math.random()-.5)*55)+'px';
+    el.style.top  = (cy-10)+'px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),2000);
+  }, i*80);
 }
 
-// ======================== TRAIN ========================
-// Generate sleepers
-const trackInner = document.getElementById('track-inner');
-for (let i = 0; i < 60; i++) {
-  const sl = document.createElement('div');
-  sl.className = 'sleeper';
-  trackInner.appendChild(sl);
-}
-// duplicate for seamless loop
-trackInner.innerHTML += trackInner.innerHTML;
-
-let trainOn = false;
-let smokeInterval = null;
-
-function toggleTrain(btn) {
-  trainOn = !trainOn;
-  const wrap = document.getElementById('train-wrap');
-  btn.classList.toggle('active', trainOn);
-
-  if (trainOn) {
-    wrap.style.setProperty('--train-speed', '9s');
-    wrap.classList.add('running');
-    burstEmoji(['🚃','🚂','💨','⭐'], btn);
-
-    // smoke puffs from chimney
-    smokeInterval = setInterval(() => {
-      const chimney = document.getElementById('chimney');
-      if (!chimney) return;
-      const rect = chimney.getBoundingClientRect();
-      for (let i = 0; i < 2; i++) {
-        setTimeout(() => {
-          const s = document.createElement('div');
-          s.className = 'smoke';
-          const size = 14 + Math.random() * 16;
-          s.style.cssText = `
-            width:${size}px; height:${size}px;
-            left:${rect.left + rect.width/2 + (Math.random()-0.5)*10}px;
-            top:${rect.top - 4}px;
-            position:fixed;
-            z-index:8;
-            animation-delay:${i*0.2}s;
-          `;
-          document.body.appendChild(s);
-          setTimeout(() => s.remove(), 1600);
-        }, i * 200);
-      }
-    }, 700);
-  } else {
-    wrap.classList.remove('running');
-    wrap.style.left = '-420px';
-    clearInterval(smokeInterval);
-  }
-}
-
-// ======================== MOON PHASE ========================
-// Crescent inner shadow for moon
-document.getElementById('moon').style.cssText += `
-  box-shadow: 0 0 40px 20px rgba(220,220,180,0.35),
-              inset -18px -10px 0 rgba(100,100,80,0.25);
-`;
-
-// INIT
+// init sky
 setScene('morning', document.querySelector('.btn-morning'));
+
+
+/* ================================================
+   TAB SWITCHER
+   ================================================ */
+function switchTab(id, btn) {
+  document.querySelectorAll('.train-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.train-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+
+/* ================================================
+   生駒ケーブル ENGINE
+   ================================================ */
+const it1 = document.getElementById('itrain1');
+const it2 = document.getElementById('itrain2');
+const railUp   = document.getElementById('rail-up');
+const railDown = document.getElementById('rail-down');
+const iSeekbar = document.getElementById('ikoma-seekbar');
+const iTimeLabel = document.getElementById('ikoma-time');
+const speedBadge = document.getElementById('speed-badge');
+
+let iAudio = new Audio();
+let iSpeed = 1.0;
+
+// ---- 仮ファイル名マッピング（ここを実際のファイル名に変えてください） ----
+const TRAIN_IMAGES = {
+  sweet: 'picture_anime/sweet.png',   // スイート号
+  dremi: 'picture_anime/dremi.png',   // ドレミ号
+  train: 'picture_anime/train.png',   // いこまん
+};
+const SOUNDS = {
+  nobori1:      'sounds/nobori1.mp3',
+  surechigai1:  'sounds/surechigai1.mp3',
+  kaeri_bgm:    'sounds/ikoma_kaeri_bgm.mp3',
+  kaeri_bgm1:   'sounds/ikoma_kaeri_bgm_1.mp3',
+  sweet_bgm:    'sounds/ikoma_sweet_bgm.mp3',
+  nobori1b:     'sounds/nobori1.mp3',
+  se_hassha:    'sounds/ikoma_se.mp3',
+  se_door:      'sounds/door.mp3',
+  se_announce:  'sounds/announce.mp3',
+};
+
+function iStopAll() {
+  iAudio.pause(); iAudio.currentTime = 0;
+  [it1,it2].forEach(t=>{ t.className='ikoma-train'; t.style.display='none'; });
+  railUp.classList.remove('show'); railDown.classList.remove('show');
+  document.querySelectorAll('.pic-btn').forEach(b=>b.classList.remove('active'));
+}
+
+function iPlaySound(key) {
+  iAudio.src = SOUNDS[key];
+  iAudio.playbackRate = iSpeed;
+  iAudio.play().catch(()=>{});
+}
+
+function iSE(file) { new Audio('sounds/'+file).play().catch(()=>{}); }
+
+function iUpdateSpeed() {
+  speedBadge.textContent = `🚀 ×${iSpeed.toFixed(1)}`;
+  iAudio.playbackRate = iSpeed;
+  [it1,it2].forEach(t=>{
+    if (t.dataset.base) t.style.animationDuration = (t.dataset.base/iSpeed)+'s';
+  });
+}
+function iSpeedUp()   { iSpeed = Math.min(3.0, iSpeed+0.5); iUpdateSpeed(); }
+function iSpeedDown() { iSpeed = Math.max(0.5, iSpeed-0.5); iUpdateSpeed(); }
+
+// 6パターン
+const ikomaPlays = [
+  // 1: のぼり
+  ()=>{ it1.src=TRAIN_IMAGES.train; it1.dataset.base=6;
+        it1.style.display='block'; it1.classList.add('run-rand');
+        iPlaySound('nobori1'); },
+  // 2: すれちがい
+  ()=>{ railUp.classList.add('show'); railDown.classList.add('show');
+        it1.src=TRAIN_IMAGES.sweet; it2.src=TRAIN_IMAGES.dremi;
+        it1.dataset.base=75; it2.dataset.base=75;
+        [it1,it2].forEach(t=>t.style.display='block');
+        it1.classList.add('run-up'); it2.classList.add('run-down');
+        iUpdateSpeed(); iPlaySound('surechigai1'); },
+  // 3: かえり
+  ()=>{ railDown.classList.add('show'); it1.src=TRAIN_IMAGES.dremi;
+        it1.style.display='block'; it1.dataset.base=90;
+        it1.classList.add('run-down'); iUpdateSpeed();
+        iPlaySound('kaeri_bgm'); },
+  // 4: ゆったり
+  ()=>{ it1.src=TRAIN_IMAGES.train; it1.style.display='block';
+        it1.classList.add('run-loop'); iPlaySound('kaeri_bgm1'); },
+  // 5: スイート
+  ()=>{ railUp.classList.add('show'); it1.src=TRAIN_IMAGES.sweet;
+        it1.style.display='block'; it1.dataset.base=100;
+        it1.classList.add('run-up'); iUpdateSpeed();
+        iPlaySound('sweet_bgm'); },
+  // 6: いこまん
+  ()=>{ railUp.classList.add('show'); it1.src=TRAIN_IMAGES.sweet;
+        it1.style.display='block'; it1.dataset.base=78;
+        it1.classList.add('run-up'); iUpdateSpeed();
+        iPlaySound('nobori1b'); },
+];
+
+function iPlay(n, btn) {
+  iStopAll();
+  ikomaPlays[n-1]();
+  btn.classList.add('active');
+}
+
+// seekbar sync
+setInterval(()=>{
+  if (!iAudio.duration) return;
+  iSeekbar.max = iAudio.duration;
+  iSeekbar.value = iAudio.currentTime;
+  const cur = Math.floor(iAudio.currentTime);
+  const dur = Math.floor(iAudio.duration);
+  iTimeLabel.textContent = `${cur} / ${dur}`;
+}, 300);
+iSeekbar.addEventListener('input', ()=>{ if (iAudio.duration) iAudio.currentTime = iSeekbar.value; });
+
 </script>
 </body>
 </html>
